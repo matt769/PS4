@@ -25,27 +25,32 @@ void parse_buffer() {
    input.accel_y      = buffer[5]; 
    input.l2           = buffer[6]; 
    input.r2           = buffer[7]; 
-             
-   if(((buffer[8]&0x0F)==5) || ((buffer[8]&0x0F)==6) || ((buffer[8]&0x0F)==7)) input.button_left=1;  else input.button_left=0;  //W
-   if(((buffer[8]&0x0F)==3) || ((buffer[8]&0x0F)==4) || ((buffer[8]&0x0F)==5)) input.button_down=1;  else input.button_down=0; //S
-   if(((buffer[8]&0x0F)==1) || ((buffer[8]&0x0F)==2) || ((buffer[8]&0x0F)==3)) input.button_right=1; else input.button_right=0;  //E
-   if(((buffer[8]&0x0F)==0) || ((buffer[8]&0x0F)==1) || ((buffer[8]&0x0F)==7)) input.button_up=1;    else input.button_up=0; //N
-   input.button_square  =((buffer[8]&0b00010000)>>4); // SQUARE
-   input.button_x       =((buffer[8]&0b00100000)>>5); // X
-   input.button_circle  =((buffer[8]&0b01000000)>>6); // CIRCLE
-   input.button_triangle=((buffer[8]&0b10000000)>>7); // TRIANGLE
 
-   input.button_l1     =((buffer[9]&0b00000001));    // L1
-   input.button_r1     =((buffer[9]&0b00000010)>>1); // R1
-   input.button_l2     =((buffer[9]&0b00000100)>>2); // L2
-   input.button_r2     =((buffer[9]&0b00001000)>>3); // R2
-   input.button_share  =((buffer[9]&0b00010000)>>4); // SHARE
-   input.button_options=((buffer[9]&0b00100000)>>5); // OPTIONS
-   input.button_l3     =((buffer[9]&0b01000000)>>6); // L3
-   input.button_r3     =((buffer[9]&0b10000000)>>7); // R3
+    // 8 values for horizontal, vertical and diagonal directions
+   const uint8_t dpad = buffer[8] & 0x0F;
+   if((dpad==5) || (dpad==6) || (dpad==7)) input.button_left = true;  else input.button_left = false;
+   if((dpad==3) || (dpad==4) || (dpad==5)) input.button_down = true;  else input.button_down = false;
+   if((dpad==1) || (dpad==2) || (dpad==3)) input.button_right = true; else input.button_right = false;
+   if((dpad==0) || (dpad==1) || (dpad==7)) input.button_up = true;    else input.button_up = false;
 
-   input.button_ps    =((buffer[10]&0b00000001));    // PS4
-   input.button_tpad   =((buffer[10]&0b00000010)>>1); // TPAD
+   const uint8_t shapes = buffer[8];
+   input.button_square  =(shapes >> 4);
+   input.button_x       =(shapes >> 5);
+   input.button_circle  =(shapes >> 6);
+   input.button_triangle=(shapes >> 7);
+
+   const uint8_t more_buttons = buffer[9];
+   input.button_l1     =(more_buttons & 0b00000001);
+   input.button_r1     =(more_buttons & 0b00000010 >> 1);
+   input.button_l2     =(more_buttons & 0b00000100 >> 2);
+   input.button_r2     =(more_buttons & 0b00001000 >> 3);
+   input.button_share  =(more_buttons & 0b00010000 >> 4);
+   input.button_options=(more_buttons & 0b00100000 >> 5);
+   input.button_l3     =(more_buttons & 0b01000000 >> 6);
+   input.button_r3     =(more_buttons & 0b10000000 >> 7);
+
+   input.button_ps    =(buffer[10] & 0b00000001);
+   input.button_tpad   =((buffer[10] & 0b00000010) >> 1);
                 
    input.tpad_x        =buffer[11]; 
    input.tpad_y        =buffer[12];      

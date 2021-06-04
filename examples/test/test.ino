@@ -16,5 +16,3 @@ void loop() {
   delay(100);
   ps4::printData(&Serial);
 }
-
-
