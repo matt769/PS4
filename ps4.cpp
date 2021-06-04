@@ -5,14 +5,16 @@
 
 namespace ps4 {
 
+PS4_data input;
+
 namespace {
+TwoWire* wire;
 uint8_t kI2cAddress;
 bool initialised = false;
 constexpr uint8_t request_num_bytes = 14;
 
 uint8_t buffer[request_num_bytes];
 bool new_data_received = false;
-PS4_data input;
 
 void parse_buffer() {
   if (!initialised) return;
@@ -34,50 +36,51 @@ void parse_buffer() {
    if((dpad==0) || (dpad==1) || (dpad==7)) input.button_up = true;    else input.button_up = false;
 
    const uint8_t shapes = buffer[8];
-   input.button_square  =(shapes >> 4);
-   input.button_x       =(shapes >> 5);
-   input.button_circle  =(shapes >> 6);
-   input.button_triangle=(shapes >> 7);
+   input.button_square  = (shapes >> 4);
+   input.button_x       = (shapes >> 5);
+   input.button_circle  = (shapes >> 6);
+   input.button_triangle= (shapes >> 7);
 
    const uint8_t more_buttons = buffer[9];
-   input.button_l1     =(more_buttons & 0b00000001);
-   input.button_r1     =(more_buttons & 0b00000010 >> 1);
-   input.button_l2     =(more_buttons & 0b00000100 >> 2);
-   input.button_r2     =(more_buttons & 0b00001000 >> 3);
-   input.button_share  =(more_buttons & 0b00010000 >> 4);
-   input.button_options=(more_buttons & 0b00100000 >> 5);
-   input.button_l3     =(more_buttons & 0b01000000 >> 6);
-   input.button_r3     =(more_buttons & 0b10000000 >> 7);
+   input.button_l1     = (more_buttons & 0b00000001);
+   input.button_r1     = (more_buttons & 0b00000010 >> 1);
+   input.button_l2     = (more_buttons & 0b00000100 >> 2);
+   input.button_r2     = (more_buttons & 0b00001000 >> 3);
+   input.button_share  = (more_buttons & 0b00010000 >> 4);
+   input.button_options= (more_buttons & 0b00100000 >> 5);
+   input.button_l3     = (more_buttons & 0b01000000 >> 6);
+   input.button_r3     = (more_buttons & 0b10000000 >> 7);
 
-   input.button_ps    =(buffer[10] & 0b00000001);
-   input.button_tpad   =((buffer[10] & 0b00000010) >> 1);
+   input.button_ps    = (buffer[10] & 0b00000001);
+   input.button_tpad   = ((buffer[10] & 0b00000010) >> 1);
                 
-   input.tpad_x        =buffer[11]; 
-   input.tpad_y        =buffer[12];      
-   input.battery       =buffer[13];    
+   input.tpad_x        = buffer[11]; 
+   input.tpad_y        = buffer[12];      
+   input.battery       = buffer[13];    
    
    new_data_received = true; 
 }
 
 }
 
-void init(uint8_t i2c_address) {
+void init(TwoWire* wire_in, const uint8_t i2c_address) {
+  wire = wire_in;
   kI2cAddress = i2c_address;
-  Wire.begin();
+  wire->begin(); // should be no harm in calling again if already done
   initialised = true;
 }
 
 void fetchData() {
   if (!initialised) return;
-  Wire.beginTransmission(kI2cAddress);  // transmit to device
-  Wire.write(0);                        // Start receiving data from register 0
-  Wire.endTransmission();               // end transmission
+  wire->beginTransmission(kI2cAddress);
+  wire->write(0);                        // Start receiving data from register 0
+  wire->endTransmission();
    
-  Wire.requestFrom(kI2cAddress, request_num_bytes);
-  if(Wire.available() == request_num_bytes) {
+  wire->requestFrom(kI2cAddress, request_num_bytes);
+  if(wire->available() == request_num_bytes) {
     uint8_t idx = 0;
-    while (Wire.available()) {
-      buffer[idx++] = Wire.read();     
+    while (wire->available()) {
+      buffer[idx++] = wire->read();     
     }
   } else {
     Serial.print("Unexpected buffer size: "); Serial.println(Wire.available()); // DEBUG remove later

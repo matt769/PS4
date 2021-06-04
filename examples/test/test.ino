@@ -8,7 +8,8 @@
 
 void setup() {
   Serial.begin(115200);
-  ps4::init();
+  Wire.begin();
+  ps4::init(&Wire);
 }
 
 void loop() {

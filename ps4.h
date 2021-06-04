@@ -2,6 +2,7 @@
 #define PS4_H_
 
 #include <Arduino.h>
+#include <Wire.h>
 
 namespace ps4 {
 
@@ -43,7 +44,7 @@ struct PS4_data {
   uint8_t  battery;
 };
 
-void init(uint8_t i2c_address = 41);
+void init(TwoWire* wire, uint8_t i2c_address = 41);
 void fetchData();
 void printData(Stream* stream);
 
