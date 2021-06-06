@@ -5,20 +5,13 @@
 
 namespace ps4 {
 
-PS4_data input;
+PS4::PS4(TwoWire* wire_in, const uint8_t i2c_address_in)
+  : new_data_received(false), wire(wire_in), i2c_address(i2c_address_in)
+  {
+  wire->begin(); // should be no harm in calling again if already done
+}
 
-namespace {
-TwoWire* wire;
-uint8_t kI2cAddress;
-bool initialised = false;
-constexpr uint8_t request_num_bytes = 14;
-
-uint8_t buffer[request_num_bytes];
-bool new_data_received = false;
-
-void parse_buffer() {
-  if (!initialised) return;
-  
+void PS4::parseBuffer() {  
    input.l_joystick_x = buffer[0];
    input.l_joystick_y = buffer[1];
    input.r_joystick_x = buffer[2];
@@ -35,24 +28,25 @@ void parse_buffer() {
    if((dpad==1) || (dpad==2) || (dpad==3)) input.button_right = true; else input.button_right = false;
    if((dpad==0) || (dpad==1) || (dpad==7)) input.button_up = true;    else input.button_up = false;
 
-   const uint8_t shapes = buffer[8];
-   input.button_square  = (shapes >> 4);
-   input.button_x       = (shapes >> 5);
-   input.button_circle  = (shapes >> 6);
-   input.button_triangle= (shapes >> 7);
+   const uint8_t shapes = buffer[8] & 0xF0;
+   input.button_square  = (shapes & 0b00010000);
+   input.button_x       = (shapes & 0b00100000);
+   input.button_circle  = (shapes & 0b01000000);
+   input.button_triangle= (shapes & 0b10000000);
+  
 
    const uint8_t more_buttons = buffer[9];
    input.button_l1     = (more_buttons & 0b00000001);
-   input.button_r1     = (more_buttons & 0b00000010 >> 1);
-   input.button_l2     = (more_buttons & 0b00000100 >> 2);
-   input.button_r2     = (more_buttons & 0b00001000 >> 3);
-   input.button_share  = (more_buttons & 0b00010000 >> 4);
-   input.button_options= (more_buttons & 0b00100000 >> 5);
-   input.button_l3     = (more_buttons & 0b01000000 >> 6);
-   input.button_r3     = (more_buttons & 0b10000000 >> 7);
+   input.button_r1     = (more_buttons & 0b00000010);
+   input.button_l2     = (more_buttons & 0b00000100);
+   input.button_r2     = (more_buttons & 0b00001000);
+   input.button_share  = (more_buttons & 0b00010000);
+   input.button_options= (more_buttons & 0b00100000);
+   input.button_l3     = (more_buttons & 0b01000000);
+   input.button_r3     = (more_buttons & 0b10000000);
 
    input.button_ps    = (buffer[10] & 0b00000001);
-   input.button_tpad   = ((buffer[10] & 0b00000010) >> 1);
+   input.button_tpad   = (buffer[10] & 0b00000010);
                 
    input.tpad_x        = buffer[11]; 
    input.tpad_y        = buffer[12];      
@@ -61,22 +55,12 @@ void parse_buffer() {
    new_data_received = true; 
 }
 
-}
-
-void init(TwoWire* wire_in, const uint8_t i2c_address) {
-  wire = wire_in;
-  kI2cAddress = i2c_address;
-  wire->begin(); // should be no harm in calling again if already done
-  initialised = true;
-}
-
-void fetchData() {
-  if (!initialised) return;
-  wire->beginTransmission(kI2cAddress);
+void PS4::fetchData() {
+  wire->beginTransmission(i2c_address);
   wire->write(0);                        // Start receiving data from register 0
   wire->endTransmission();
    
-  wire->requestFrom(kI2cAddress, request_num_bytes);
+  wire->requestFrom(i2c_address, request_num_bytes);
   if(wire->available() == request_num_bytes) {
     uint8_t idx = 0;
     while (wire->available()) {
@@ -87,12 +71,10 @@ void fetchData() {
     return;
   }
   
-  parse_buffer();                         // Decode PS4 data
+  parseBuffer();
 }
 
-
-
-void printData(Stream* stream) {
+void printData(Stream* stream, const PS4_data& input) {
   stream->print(input.l_joystick_x); stream->print('\t');
   stream->print(input.l_joystick_y); stream->print('\t');
   stream->print(input.r_joystick_x); stream->print('\t');

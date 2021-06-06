@@ -47,9 +47,22 @@ struct PS4_data {
   uint8_t  battery;
 };
 
-void init(TwoWire* wire, uint8_t i2c_address = 41);
-void fetchData();
-void printData(Stream* stream);
+class PS4 {
+  public:
+    PS4(TwoWire* wire, uint8_t i2c_address = 41);
+    void fetchData();
+    PS4_data input;
+    bool new_data_received;
+    static constexpr uint8_t request_num_bytes = 14;
+  private:
+    TwoWire* wire;
+    uint8_t i2c_address;
+    uint8_t buffer[request_num_bytes];
+    void parseBuffer();
+  
+};
+
+void printData(Stream* stream, const PS4_data& data);
 
 } // namespace ps4
 
