@@ -1,8 +1,3 @@
-// https://www.hobbytronics.co.uk/usb-host-board-v24
-// https://www.hobbytronics.co.uk/ps3-ps4-controller-bluetooth
-// Note that Serial output must be turned off in USB host (see links above) to receive 'good' data via i2c.
-
-
 #ifndef PS4_H_
 #define PS4_H_
 
@@ -18,8 +13,8 @@ struct PS4_data {
   uint8_t  r_joystick_y; // up (0) to down (255)
   uint8_t  accel_x; // roll right (0) to roll left (255)
   uint8_t  accel_y; // pitch up (0) to pitch down (255)
-  uint8_t  l2; // 0-255 value as well as separate on/off indicator
-  uint8_t  r2; // 0-255 value as well as separate on/off indicator   
+  uint8_t  l2; // 0-255 value as well as separate on/off indicator (button_l2)
+  uint8_t  r2; // 0-255 value as well as separate on/off indicator (button_r2)
   
   bool  button_left;
   bool  button_down;
